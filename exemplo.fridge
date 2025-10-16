@@ -1,0 +1,13 @@
+var milk = 1;
+var meat = 2;
+
+if (DOOR == true) {
+    print("⚠️  Feche a porta!");
+}
+
+while (meat > 0) {
+    set_temp(2);
+    set_mode(TURBO);
+    meat = meat - 1;
+    add_item("carne preparada");
+}
