@@ -1,0 +1,12 @@
+var x = 10;
+var y = 5;
+
+if (x > y) {
+    print("x é maior que y");
+} else {
+    print("y é maior ou igual a x");
+}
+
+var soma = x + y;
+print("Soma: ");
+

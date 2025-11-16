@@ -103,6 +103,90 @@ Enquanto houver carne (`meat > 0`), executa:
 
 ---
 
+## 🚀 Como Usar
+
+### Compilação
+
+1. **Compilar o compilador:**
+   ```bash
+   make clean
+   make
+   ```
+
+2. **Compilar um programa FridgeLang:**
+   ```bash
+   ./fridge_compiler exemplo.fridge
+   ```
+   Isso gera o arquivo `output.asm` com o código assembly.
+
+### Execução
+
+Execute o programa assembly na GeladeiraVM:
+
+```bash
+python3 geladeira_vm.py output.asm
+```
+
+Para ver a execução passo a passo:
+
+```bash
+python3 geladeira_vm.py output.asm --verbose
+```
+
+### Exemplos
+
+O repositório inclui os seguintes exemplos:
+
+- `exemplo.fridge` - Exemplo principal com if/while
+- `teste1.fridge` - Teste de condicionais e aritmética
+- `teste2.fridge` - Teste de loops e comandos da VM
+
+## 🛠️ Arquitetura Técnica
+
+### ISA da GeladeiraVM
+
+A GeladeiraVM implementa as seguintes instruções:
+
+**Aritméticas:**
+- `LOAD R0, VAR_X` - Carrega variável em registrador
+- `STORE R0, VAR_X` - Armazena registrador em variável
+- `ADD R0, R1` - Soma
+- `SUB R0, R1` - Subtração
+- `MUL R0, R1` - Multiplicação
+- `DIV R0, R1` - Divisão
+
+**Controle de Fluxo:**
+- `CMP R0, R1` - Compara e seta flags
+- `JE label` - Jump if equal
+- `JNE label` - Jump if not equal
+- `JL label` - Jump if less
+- `JG label` - Jump if greater
+- `JLE label` - Jump if less or equal
+- `JGE label` - Jump if greater or equal
+- `JMP label` - Jump incondicional
+- `LABEL name` - Define label
+
+**Pilha:**
+- `PUSH value` - Empilha valor
+- `POP R0` - Desempilha para registrador
+
+**Específicas da GeladeiraVM:**
+- `SET_TEMP R0` - Define temperatura
+- `SET_MODE MODE` - Define modo (NORMAL/ECO/TURBO)
+- `ADD_ITEM "item"` - Adiciona item
+- `REMOVE_ITEM "item"` - Remove item
+- `CHECK_SENSOR SENSOR` - Lê sensor (DOOR/ENERGY/OUTSIDE_TEMP)
+- `PRINT "mensagem"` - Imprime mensagem
+- `HALT` - Encerra execução
+
+### Turing-Completude
+
+A GeladeiraVM é Turing-completa pois possui:
+- ✅ 2 registradores (R0, R1) + memória ilimitada
+- ✅ Instruções de controle de fluxo (JMP, JE, etc.)
+- ✅ Aritmética básica
+- ✅ Pilha para armazenamento temporário
+
 ## 🚀 Possíveis usos da FridgeLang
 
 - **Ensino de compiladores** → gramática clara, simples e extensível.  

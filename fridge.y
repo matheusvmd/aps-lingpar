@@ -57,6 +57,8 @@ void emit(const char *fmt, ...) {
 
 /* generate code to evaluate an expression and leave result on VM stack */
 int temp_counter = 0;
+int current_if_id = 0;
+int current_while_id = 0;
 void gen_expr_to_stack(); /* prototype */
 
 %}
@@ -114,45 +116,48 @@ atribuicao:
     ;
 
 condicional:
-    IF '(' expression ')' bloco {
-        /* expression result on stack -> POP R0; if R0 == 0 jump to else/endif */
-        int id = ++temp_counter;
+    IF '(' expression ')' {
+        /* Evaluate condition first, result is on stack */
+        current_if_id = ++temp_counter;
         emit("POP R0");
         emit("CMP R0, 0");
-        emit("JE ELSE_%d", id);
-        /* then block already emitted */
-        emit("JMP ENDIF_%d", id);
-        emit("LABEL ELSE_%d", id);
-        /* else handled if present */
-        emit("LABEL ENDIF_%d", id);
+        emit("JE ELSE_%d", current_if_id);
+    } bloco {
+        /* Then block executed, now jump to end */
+        emit("JMP ENDIF_%d", current_if_id);
+        emit("LABEL ELSE_%d", current_if_id);
+        emit("LABEL ENDIF_%d", current_if_id);
     }
-    | IF '(' expression ')' bloco ELSE bloco {
-        /* Slightly different handling: we'll assume blocks emit directly */
-        int id = ++temp_counter;
+    | IF '(' expression ')' {
+        /* Evaluate condition first */
+        current_if_id = ++temp_counter;
         emit("POP R0");
         emit("CMP R0, 0");
-        emit("JE ELSE_%d", id);
-        /* then block */
-        /* after then */
-        emit("JMP ENDIF_%d", id);
-        emit("LABEL ELSE_%d", id);
-        /* else block */
-        emit("LABEL ENDIF_%d", id);
+        emit("JE ELSE_%d", current_if_id);
+    } bloco ELSE {
+        /* Then block done, jump to end */
+        emit("JMP ENDIF_%d", current_if_id);
+        emit("LABEL ELSE_%d", current_if_id);
+    } bloco {
+        /* Else block done */
+        emit("LABEL ENDIF_%d", current_if_id);
     }
     ;
 
 laco_while:
-    WHILE '(' expression ')' bloco {
-        /* naive: produce labels and assume expression/block emitted inline */
-        int id = ++temp_counter;
-        emit("LABEL WHILE_START_%d", id);
-        emit("/* evaluate condition (already emitted by parsing expression) */");
+    WHILE {
+        /* Start of while loop - emit label */
+        current_while_id = ++temp_counter;
+        emit("LABEL WHILE_START_%d", current_while_id);
+    } '(' expression ')' {
+        /* Condition evaluated, result on stack */
         emit("POP R0");
         emit("CMP R0, 0");
-        emit("JE WHILE_END_%d", id);
-        /* body */
-        emit("JMP WHILE_START_%d", id);
-        emit("LABEL WHILE_END_%d", id);
+        emit("JE WHILE_END_%d", current_while_id);
+    } bloco {
+        /* Body executed, jump back to start */
+        emit("JMP WHILE_START_%d", current_while_id);
+        emit("LABEL WHILE_END_%d", current_while_id);
     }
     ;
 
@@ -194,9 +199,15 @@ expression:
         $$ = $1;
       }
     | IDENT {
-        int addr = sym_getaddr($1);
-        emit("LOAD R0, VAR_%d   ; %s", addr, $1);
-        emit("PUSH R0");
+        /* Check if it's a sensor (readonly) */
+        if (strcmp($1, "DOOR") == 0 || strcmp($1, "ENERGY") == 0 || strcmp($1, "OUTSIDE_TEMP") == 0) {
+            emit("CHECK_SENSOR %s", $1);
+            emit("PUSH R0");
+        } else {
+            int addr = sym_getaddr($1);
+            emit("LOAD R0, VAR_%d   ; %s", addr, $1);
+            emit("PUSH R0");
+        }
         free($1);
         $$ = 0;
       }
@@ -231,40 +242,76 @@ expression:
         emit("PUSH R0");
       }
     | expression EQ expression {
+        int id = ++temp_counter;
         emit("POP R1");
         emit("POP R0");
         emit("CMP R0, R1");
-        emit("PUSH_EQ"); /* pseudo */
+        emit("JE EQ_TRUE_%d", id);
+        emit("PUSH 0");  /* false */
+        emit("JMP EQ_DONE_%d", id);
+        emit("LABEL EQ_TRUE_%d", id);
+        emit("PUSH 1");  /* true */
+        emit("LABEL EQ_DONE_%d", id);
       }
     | expression NEQ expression {
+        int id = ++temp_counter;
         emit("POP R1");
         emit("POP R0");
         emit("CMP R0, R1");
-        emit("PUSH_NEQ");
+        emit("JNE NEQ_TRUE_%d", id);
+        emit("PUSH 0");  /* false */
+        emit("JMP NEQ_DONE_%d", id);
+        emit("LABEL NEQ_TRUE_%d", id);
+        emit("PUSH 1");  /* true */
+        emit("LABEL NEQ_DONE_%d", id);
       }
     | expression '<' expression {
+        int id = ++temp_counter;
         emit("POP R1");
         emit("POP R0");
-        emit("CMP_LT");
-        emit("PUSH R0"); /* placeholder */
+        emit("CMP R0, R1");
+        emit("JL LT_TRUE_%d", id);
+        emit("PUSH 0");  /* false */
+        emit("JMP LT_DONE_%d", id);
+        emit("LABEL LT_TRUE_%d", id);
+        emit("PUSH 1");  /* true */
+        emit("LABEL LT_DONE_%d", id);
       }
     | expression '>' expression {
+        int id = ++temp_counter;
         emit("POP R1");
         emit("POP R0");
-        emit("CMP_GT");
-        emit("PUSH R0");
+        emit("CMP R0, R1");
+        emit("JG GT_TRUE_%d", id);
+        emit("PUSH 0");  /* false */
+        emit("JMP GT_DONE_%d", id);
+        emit("LABEL GT_TRUE_%d", id);
+        emit("PUSH 1");  /* true */
+        emit("LABEL GT_DONE_%d", id);
       }
     | expression LE expression {
+        int id = ++temp_counter;
         emit("POP R1");
         emit("POP R0");
-        emit("CMP_LE");
-        emit("PUSH R0");
+        emit("CMP R0, R1");
+        emit("JLE LE_TRUE_%d", id);
+        emit("PUSH 0");  /* false */
+        emit("JMP LE_DONE_%d", id);
+        emit("LABEL LE_TRUE_%d", id);
+        emit("PUSH 1");  /* true */
+        emit("LABEL LE_DONE_%d", id);
       }
     | expression GE expression {
+        int id = ++temp_counter;
         emit("POP R1");
         emit("POP R0");
-        emit("CMP_GE");
-        emit("PUSH R0");
+        emit("CMP R0, R1");
+        emit("JGE GE_TRUE_%d", id);
+        emit("PUSH 0");  /* false */
+        emit("JMP GE_DONE_%d", id);
+        emit("LABEL GE_TRUE_%d", id);
+        emit("PUSH 1");  /* true */
+        emit("LABEL GE_DONE_%d", id);
       }
     ;
 
@@ -292,14 +339,17 @@ int main(int argc, char **argv) {
     yyin = in;
     yyparse();
 
+    /* Emit HALT at the end */
+    emit("HALT");
+    
     /* optional: dump symbol table as comments */
-    fprintf(yyout, "\n; Symbol table:\n");
+    fprintf(outasm, "\n; Symbol table:\n");
     for (Sym *s = symtable; s; s = s->next) {
-        fprintf(yyout, "; VAR_%d = %s\n", s->addr, s->name);
+        fprintf(outasm, "; VAR_%d = %s\n", s->addr, s->name);
     }
 
     fclose(in);
-    fclose(yyout);
+    fclose(outasm);
     printf("Geração concluída -> output.asm\n");
     return 0;
 }

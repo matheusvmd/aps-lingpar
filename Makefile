@@ -1,7 +1,7 @@
 all: fridge_compiler
 
 fridge_compiler: fridge.tab.c lex.yy.c
-	gcc -o fridge_compiler fridge.tab.c lex.yy.c -lfl
+	gcc -o fridge_compiler fridge.tab.c lex.yy.c -ll
 
 fridge.tab.c fridge.tab.h: fridge.y
 	bison -d fridge.y
