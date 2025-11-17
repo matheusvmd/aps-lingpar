@@ -1,30 +1,65 @@
-PUSH 1
+PUSH 3
 POP R0
-STORE R0, VAR_0   ; milk
+STORE R0, VAR_0   ; quantidade_leite
+PUSH 6
+POP R0
+STORE R0, VAR_1   ; quantidade_ovos
 PUSH 2
 POP R0
-STORE R0, VAR_1   ; meat
-CHECK_SENSOR DOOR
+STORE R0, VAR_2   ; quantidade_carne
+PUSH 0
+POP R0
+STORE R0, VAR_3   ; total_itens
+LOAD R0, VAR_0   ; quantidade_leite
+PUSH R0
+LOAD R0, VAR_1   ; quantidade_ovos
+PUSH R0
+POP R1
+POP R0
+ADD R0, R1
+PUSH R0
+LOAD R0, VAR_2   ; quantidade_carne
+PUSH R0
+POP R1
+POP R0
+ADD R0, R1
+PUSH R0
+POP R0
+STORE R0, VAR_3   ; total_itens
+PRINT "Iniciando organizacao do estoque"
+LABEL WHILE_START_1
+LOAD R0, VAR_0   ; quantidade_leite
+PUSH R0
+PUSH 0
+POP R1
+POP R0
+CMP R0, R1
+JG GT_TRUE_2
+PUSH 0
+JMP GT_DONE_2
+LABEL GT_TRUE_2
+PUSH 1
+LABEL GT_DONE_2
+POP R0
+CMP R0, 0
+JE WHILE_END_1
+ADD_ITEM "leite"
+LOAD R0, VAR_0   ; quantidade_leite
 PUSH R0
 PUSH 1
 POP R1
 POP R0
-CMP R0, R1
-JE EQ_TRUE_1
-PUSH 0
-JMP EQ_DONE_1
-LABEL EQ_TRUE_1
-PUSH 1
-LABEL EQ_DONE_1
+SUB R0, R1
+PUSH R0
 POP R0
-CMP R0, 0
-JE ELSE_2
-PRINT "⚠️  Feche a porta!"
-JMP ENDIF_2
-LABEL ELSE_2
-LABEL ENDIF_2
+STORE R0, VAR_0   ; quantidade_leite
+PUSH 4
+POP R0
+SET_TEMP R0
+JMP WHILE_START_1
+LABEL WHILE_END_1
 LABEL WHILE_START_3
-LOAD R0, VAR_1   ; meat
+LOAD R0, VAR_1   ; quantidade_ovos
 PUSH R0
 PUSH 0
 POP R1
@@ -39,11 +74,8 @@ LABEL GT_DONE_4
 POP R0
 CMP R0, 0
 JE WHILE_END_3
-PUSH 2
-POP R0
-SET_TEMP R0
-SET_MODE TURBO
-LOAD R0, VAR_1   ; meat
+ADD_ITEM "ovos"
+LOAD R0, VAR_1   ; quantidade_ovos
 PUSH R0
 PUSH 1
 POP R1
@@ -51,12 +83,32 @@ POP R0
 SUB R0, R1
 PUSH R0
 POP R0
-STORE R0, VAR_1   ; meat
-ADD_ITEM "carne preparada"
-JMP WHILE_START_3
-LABEL WHILE_END_3
+STORE R0, VAR_1   ; quantidade_ovos
+LOAD R0, VAR_1   ; quantidade_ovos
+PUSH R0
+PUSH 3
+POP R1
+POP R0
+CMP R0, R1
+JG GT_TRUE_5
+PUSH 0
+JMP GT_DONE_5
+LABEL GT_TRUE_5
+PUSH 1
+LABEL GT_DONE_5
+POP R0
+CMP R0, 0
+JE ELSE_6
+PUSH 4
+POP R0
+SET_TEMP R0
+JMP ENDIF_6
+LABEL ELSE_6
+LABEL ENDIF_6
 HALT
 
 ; Symbol table:
-; VAR_1 = meat
-; VAR_0 = milk
+; VAR_3 = total_itens
+; VAR_2 = quantidade_carne
+; VAR_1 = quantidade_ovos
+; VAR_0 = quantidade_leite

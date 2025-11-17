@@ -1,0 +1,51 @@
+var quantidade_leite = 3;
+var quantidade_ovos = 6;
+var quantidade_carne = 2;
+var total_itens = 0;
+
+total_itens = quantidade_leite + quantidade_ovos + quantidade_carne;
+
+print("Iniciando organizacao do estoque");
+
+while (quantidade_leite > 0) {
+    add_item("leite");
+    quantidade_leite = quantidade_leite - 1;
+    set_temp(4);
+}
+
+while (quantidade_ovos > 0) {
+    add_item("ovos");
+    quantidade_ovos = quantidade_ovos - 1;
+    if (quantidade_ovos > 3) {
+        set_temp(4);
+    } else {
+        set_temp(2);
+    }
+}
+
+while (quantidade_carne > 0) {
+    add_item("carne");
+    quantidade_carne = quantidade_carne - 1;
+    set_temp(1);
+    set_mode(TURBO);
+}
+
+if (DOOR == true) {
+    print("Porta aberta detectada");
+    set_mode(ECO);
+} else {
+    if (total_itens > 10) {
+        set_mode(TURBO);
+        print("Muitos itens, modo TURBO");
+    } else {
+        set_mode(NORMAL);
+        print("Modo NORMAL ativado");
+    }
+}
+
+if (ENERGY > 100) {
+    print("Alto consumo detectado");
+    set_mode(ECO);
+}
+
+print("Organizacao concluida");

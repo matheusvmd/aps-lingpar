@@ -1,0 +1,29 @@
+var temp_atual = 4;
+var temp_desejada = 3;
+var diferenca = 0;
+
+diferenca = temp_atual - temp_desejada;
+
+if (diferenca > 2) {
+    set_temp(1);
+    set_mode(TURBO);
+    print("Resfriamento intenso ativado");
+} else {
+    if (diferenca == 0) {
+        set_temp(temp_desejada);
+        set_mode(ECO);
+        print("Temperatura ideal mantida");
+    } else {
+        set_temp(4);
+        set_mode(NORMAL);
+        print("Temperatura ajustada");
+    }
+}
+
+if (OUTSIDE_TEMP > 30) {
+    set_temp(2);
+    print("Ajuste para clima quente");
+}
+
+add_item("agua");
+add_item("refrigerante");
